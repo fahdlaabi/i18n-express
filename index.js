@@ -1,5 +1,5 @@
 var fs = require('fs');
-
+var session = require('express-session')
 function getLangFromHeaders (req) {
   var languagesRaw = req.headers['accept-language'] || 'NONE';
   var lparts = languagesRaw.split(',');
@@ -52,9 +52,9 @@ exports = module.exports = function (opts) {
   var translationsPath = opts.translationsPath || 'i18n';
   var cookieLangName = opts.cookieLangName || 'ulang';
   var browserEnable = opts.browserEnable !== false;
-  var defaultLang = opts.defaultLang || 'en';
+  var defaultLang = opts.defaultLang || 'eng';
   var paramLangName = opts.paramLangName || 'clang';
-  var siteLangs = opts.siteLangs || ['en'];
+  var siteLangs = opts.siteLangs || ['eng'];
   var textsVarName = opts.textsVarName || 'texts';
 
   if (siteLangs.constructor !== Array) {
@@ -93,9 +93,15 @@ exports = module.exports = function (opts) {
         }
       } else if (browserEnable && alreadyBrowser === false) {
         var wLang = getLangFromHeaders(req);
-
         if (wLang.length) {
           computedLang = wLang[0];
+          for (let i in siteLangs) {
+            if (siteLangs[i].split('-').indexOf(wLang[0].split('-')[0]) > -1) {
+              req.app.locals.ulang = siteLangs[i]
+              req.app.locals.langRedirection = siteLangs[i]
+            }
+          }
+          req.app.locals.langRedirection = req.app.locals.langRedirection || defaultLang;
           break;
         } else {
           alreadyBrowser = true;
@@ -108,16 +114,29 @@ exports = module.exports = function (opts) {
         break;
       }
     }
-
-      // User is setting a lang via get param. Store and use it.
+    
+    // User is setting a lang via get param. Store and use it.
     if (paramLangName in req.query) {
       if (siteLangs.indexOf(req.query[paramLangName]) > -1) {
         if (cookieLangName && req.session) {
           req.session[cookieLangName] = req.query[paramLangName].toString();
+          req.app.locals.ulang = req.query[paramLangName].toString();
         }
         computedLang = req.query[paramLangName].toString();
       }
     }
+    else {
+      if (req.url.split("/")[1].length == 2 || req.url.split("/")[1].length == 3 || req.url.split("/")[1].split('-')[0].length == 2 ) {
+        if (siteLangs.indexOf(req.url.split("/")[1]) > -1) {
+          if (cookieLangName && req.session) {
+            req.session[cookieLangName] = req.url.split("/")[1].toString();
+            req.app.locals.ulang = req.url.split("/")[1].toString()
+          }
+          computedLang = req.url.split("/")[1];
+        }
+      }
+    }
+    
 
     function setDefaulti18n () {
       req.app.locals[textsVarName] = i18nTranslations[defaultLang];
@@ -127,7 +146,6 @@ exports = module.exports = function (opts) {
     computedLang = computedLang.toLowerCase();
 
     // setting translations to views
-
     if (computedLang in i18nTranslations) {
       req.app.locals[textsVarName] = i18nTranslations[computedLang];
       req.app.locals.lang = computedLang;
