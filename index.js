@@ -1,31 +1,31 @@
-var fs = require('fs');
-var session = require('express-session')
-function getLangFromHeaders (req) {
-  var languagesRaw = req.headers['accept-language'] || 'NONE';
-  var lparts = languagesRaw.split(',');
+const fs = require("fs");
+
+function getLangFromHeaders(req) {
+  var languagesRaw = req.headers["accept-language"] || "NONE";
+  var lparts = languagesRaw.split(",");
   var languages = [];
 
   for (var x = 0; x < lparts.length; x++) {
-    var unLangParts = lparts[x].split(';');
+    var unLangParts = lparts[x].split(";");
     languages.push(unLangParts[0]);
   }
-
+  console.log(languages);
   return languages;
 }
 
-function getLangFromCookie (req, cookieName) {
+function getLangFromCookie(req, cookieName) {
   if (cookieName && req.session && req.session[cookieName]) {
     return req.session[cookieName];
   } else {
     if (req.cookies && cookieName in req.cookies) {
       return req.cookies[cookieName].toString();
     } else {
-      return '';
+      return "";
     }
   }
 }
 
-function loadLangJSONFiles (langPath, defaultLang) {
+function loadLangJSONFiles(langPath, defaultLang) {
   var i18n = [];
   i18n[defaultLang] = [];
 
@@ -33,35 +33,41 @@ function loadLangJSONFiles (langPath, defaultLang) {
 
   if (files) {
     for (var i = 0; i < files.length; i++) {
-      if (files[i].split('.').pop() === 'json' && files[i].substr(0, 1) !== '.' && files[i].split('.').shift()) {
+      if (
+        files[i].split(".").pop() === "json" &&
+        files[i].substr(0, 1) !== "." &&
+        files[i].split(".").shift()
+      ) {
         try {
-          delete require.cache[require.resolve(langPath + '/' + files[i])];
+          delete require.cache[require.resolve(langPath + "/" + files[i])];
         } catch (e) {}
 
-        i18n[files[i].split('.').shift().toLowerCase()] = require(langPath + '/' + files[i]);
+        i18n[files[i].split(".").shift().toLowerCase()] = require(langPath +
+          "/" +
+          files[i]);
       }
     }
   } else {
-    console.log('[i18n] No files in ' + langPath);
+    console.log("[i18n] No files in " + langPath);
   }
   return i18n;
 }
 
 exports = module.exports = function (opts) {
   var i18nTranslations = [];
-  var translationsPath = opts.translationsPath || 'i18n';
-  var cookieLangName = opts.cookieLangName || 'ulang';
+  var translationsPath = opts.translationsPath || "i18n";
+  var cookieLangName = opts.cookieLangName || "ulang";
   var browserEnable = opts.browserEnable !== false;
-  var defaultLang = opts.defaultLang || 'eng';
-  var paramLangName = opts.paramLangName || 'clang';
-  var siteLangs = opts.siteLangs || ['eng'];
-  var textsVarName = opts.textsVarName || 'texts';
+  var defaultLang = opts.defaultLang || "eng";
+  var paramLangName = opts.paramLangName || "clang";
+  var siteLangs = opts.siteLangs || ["eng"];
+  var textsVarName = opts.textsVarName || "texts";
 
   if (siteLangs.constructor !== Array) {
-    throw new Error('siteLangs must be an Array with supported langs.');
+    throw new Error("siteLangs must be an Array with supported langs.");
   }
 
-  var computedLang = '';
+  var computedLang = "";
 
   i18nTranslations = loadLangJSONFiles(translationsPath, defaultLang);
 
@@ -75,7 +81,7 @@ exports = module.exports = function (opts) {
     }
   });
 
-  return function i18n (req, res, next) {
+  return function i18n(req, res, next) {
     var alreadyTryCookie = false;
     var alreadyBrowser = false;
     // set textsVarName value for tests and variable recovery
@@ -96,12 +102,13 @@ exports = module.exports = function (opts) {
         if (wLang.length) {
           computedLang = wLang[0];
           for (let i in siteLangs) {
-            if (siteLangs[i].split('-').indexOf(wLang[0].split('-')[0]) > -1) {
-              req.app.locals.ulang = siteLangs[i]
-              req.app.locals.langRedirection = siteLangs[i]
+            if (siteLangs[i].split("-").indexOf(wLang[0].split("-")[0]) > -1) {
+              req.app.locals.ulang = siteLangs[i];
+              req.app.locals.langRedirection = siteLangs[i];
             }
           }
-          req.app.locals.langRedirection = req.app.locals.langRedirection || defaultLang;
+          req.app.locals.langRedirection =
+            req.app.locals.langRedirection || defaultLang;
           break;
         } else {
           alreadyBrowser = true;
@@ -110,11 +117,11 @@ exports = module.exports = function (opts) {
       } else {
         computedLang = defaultLang;
       }
-      if (computedLang !== '') {
+      if (computedLang !== "") {
         break;
       }
     }
-    
+
     // User is setting a lang via get param. Store and use it.
     if (paramLangName in req.query) {
       if (siteLangs.indexOf(req.query[paramLangName]) > -1) {
@@ -124,21 +131,23 @@ exports = module.exports = function (opts) {
         }
         computedLang = req.query[paramLangName].toString();
       }
-    }
-    else {
-      if (req.url.split("/")[1].length == 2 || req.url.split("/")[1].length == 3 || req.url.split("/")[1].split('-')[0].length == 2 ) {
+    } else {
+      if (
+        req.url.split("/")[1].length == 2 ||
+        req.url.split("/")[1].length == 3 ||
+        req.url.split("/")[1].split("-")[0].length == 2
+      ) {
         if (siteLangs.indexOf(req.url.split("/")[1]) > -1) {
           if (cookieLangName && req.session) {
             req.session[cookieLangName] = req.url.split("/")[1].toString();
-            req.app.locals.ulang = req.url.split("/")[1].toString()
+            req.app.locals.ulang = req.url.split("/")[1].toString();
           }
           computedLang = req.url.split("/")[1];
         }
       }
     }
-    
 
-    function setDefaulti18n () {
+    function setDefaulti18n() {
       req.app.locals[textsVarName] = i18nTranslations[defaultLang];
       req.app.locals.lang = defaultLang;
     }
@@ -150,9 +159,9 @@ exports = module.exports = function (opts) {
       req.app.locals[textsVarName] = i18nTranslations[computedLang];
       req.app.locals.lang = computedLang;
     } else {
-      if (computedLang.indexOf('-') > -1) {
-          // try extract "en" from "en-US"
-        var soloLang = computedLang.split('-')[0];
+      if (computedLang.indexOf("-") > -1) {
+        // try extract "en" from "en-US"
+        var soloLang = computedLang.split("-")[0];
         if (soloLang in i18nTranslations) {
           req.app.locals[textsVarName] = i18nTranslations[soloLang];
           req.app.locals.lang = soloLang;
