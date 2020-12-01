@@ -9,11 +9,12 @@ function getLangFromHeaders(req) {
     var unLangParts = lparts[x].split(";");
     languages.push(unLangParts[0]);
   }
-  console.log(languages);
+  console.log({ languages });
   return languages;
 }
 
 function getLangFromCookie(req, cookieName) {
+  console.log({ cookie: req.session[cookieName] });
   if (cookieName && req.session && req.session[cookieName]) {
     return req.session[cookieName];
   } else {
@@ -103,6 +104,7 @@ exports = module.exports = function (opts) {
           computedLang = wLang[0];
           for (let i in siteLangs) {
             if (siteLangs[i].split("-").indexOf(wLang[0].split("-")[0]) > -1) {
+              computedLang = siteLangs[i]
               req.app.locals.ulang = siteLangs[i];
               req.app.locals.langRedirection = siteLangs[i];
             }
