@@ -9,12 +9,10 @@ function getLangFromHeaders(req) {
     var unLangParts = lparts[x].split(";");
     languages.push(unLangParts[0]);
   }
-  console.log({ languages });
   return languages;
 }
 
 function getLangFromCookie(req, cookieName) {
-  console.log({ cookie: req.session[cookieName] });
   if (cookieName && req.session && req.session[cookieName]) {
     return req.session[cookieName];
   } else {
@@ -103,11 +101,12 @@ exports = module.exports = function (opts) {
         if (wLang.length) {
           computedLang = wLang[0];
           for (let i in siteLangs) {
-            console.log({
-              sitelang: siteLangs[i],
-              wlang: wLang[0],
-            });
             if (siteLangs[i].split("-").indexOf(wLang[0].split("-")[0]) > -1) {
+              console.log({
+                hhh: "HHHHHHHHHHHHHHHHHH",
+                siteLangs,
+                wLang: wLang[0],
+              });
               computedLang = siteLangs[i];
               req.app.locals.ulang = siteLangs[i];
               req.app.locals.langRedirection = siteLangs[i];
@@ -115,11 +114,6 @@ exports = module.exports = function (opts) {
           }
           req.app.locals.langRedirection =
             req.app.locals.langRedirection || defaultLang;
-          console.log({
-            langRedi: req.app.locals.langRedirection,
-            ulang: req.app.locals.ulang,
-            defaultLang,
-          });
           break;
         } else {
           alreadyBrowser = true;
