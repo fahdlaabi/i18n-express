@@ -103,18 +103,18 @@ exports = module.exports = function (opts) {
         if (wLang.length) {
           computedLang = wLang[0];
           for (let i in siteLangs) {
+            console.log({
+              sitelang: siteLangs[i],
+              wlang: wLang[0],
+            });
             if (siteLangs[i].split("-").indexOf(wLang[0].split("-")[0]) > -1) {
               computedLang = siteLangs[i];
               req.app.locals.ulang = siteLangs[i];
               req.app.locals.langRedirection = siteLangs[i];
             }
           }
-
           req.app.locals.langRedirection =
             req.app.locals.langRedirection || defaultLang;
-          console.log({
-            langRedirection: req.app.locals.langRedirection,
-          });
           break;
         } else {
           alreadyBrowser = true;
