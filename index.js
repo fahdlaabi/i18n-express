@@ -115,6 +115,10 @@ exports = module.exports = function (opts) {
           }
           req.app.locals.langRedirection =
             req.app.locals.langRedirection || defaultLang;
+          console.log({
+            langRedi: req.app.locals.langRedirection,
+            ulang: req.app.locals.ulang
+          })
           break;
         } else {
           alreadyBrowser = true;
