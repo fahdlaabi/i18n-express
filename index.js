@@ -102,11 +102,6 @@ exports = module.exports = function (opts) {
           computedLang = wLang[0];
           for (let i in siteLangs) {
             if (siteLangs[i].split("-").indexOf(wLang[0].split("-")[0]) > -1) {
-              console.log({
-                hhh: "HHHHHHHHHHHHHHHHHH",
-                siteLangs,
-                wLang: wLang[0],
-              });
               computedLang = siteLangs[i];
               req.app.locals.ulang = siteLangs[i];
               req.app.locals.langRedirection = siteLangs[i];
